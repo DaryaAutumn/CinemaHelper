@@ -3,9 +3,17 @@ package cinema.dao
 import cinema.entity.Seat
 import cinema.entity.Session
 import cinema.entity.Ticket
+import cinema.serialization.CinemaSerializer
 import cinema.ui.Drawer
+import java.time.LocalDateTime
 
 class RuntimeSessionDAO : SessionDAO {
+    override fun changeSessionTime(time: LocalDateTime, session: Session) {
+        val sessions = CinemaSerializer.deserializeSessions()
+        val s = findSessionId(session, sessions)
+        s.time = time
+        CinemaSerializer.serializeSessions(sessions)
+    }
 
     //user interface
     override fun drawSessionSeats(session: Session, tool: Drawer) {

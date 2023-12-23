@@ -10,8 +10,7 @@ data class Session(
     val movie: Movie,
     @Contextual
     var time: LocalDateTime,
-    @Transient
-    val place: CinemaHall = CinemaHall(10, 10),
+    val place: CinemaHall
 ) {
 
     val tickets = Array(place.rows) { i ->
@@ -21,7 +20,8 @@ data class Session(
     }
 
     override fun toString(): String {
-        return "${time.dayOfMonth} ${time.month} ${time.hour}:${time.minute}"
+        val minuteFormatted = String.format("%02d", time.minute)
+        return "${time.dayOfMonth} ${time.month} ${time.hour}:${minuteFormatted}"
     }
 
 }

@@ -1,9 +1,6 @@
 package cinema.ui
 
-import cinema.dao.MovieDAO
-import cinema.dao.RuntimeCinemaHallDAO
-import cinema.dao.SessionDAO
-import cinema.dao.TicketDAO
+import cinema.dao.*
 import cinema.entity.*
 import cinema.exceptions.EmptyListException
 import cinema.exceptions.MovieNotExistsException
@@ -15,14 +12,12 @@ import java.time.format.DateTimeFormatter
 import java.time.format.DateTimeParseException
 import kotlin.system.exitProcess
 
-class ConsolePrinter(var drawer: Drawer) : UIChooser {
+class ConsolePrinter(private var drawer: Drawer) : UIChooser {
 
-    override fun start(): Worker {
-        println("Hello! Enter your name:")
-        val name = checkStringInput("Nothing entered. Please enter your name:")
-        val worker = Worker(name)
-        println("Hi " + worker.name + "!")
-        return worker
+    override fun start(hall: CinemaHall) {
+        println("Hello! This is an app for cinema workers.")
+        println("Cinema has 1 hall with ${hall.lines * hall.rows} seats.")
+
     }
 
     override fun chooseOption(): Options {
@@ -59,7 +54,7 @@ class ConsolePrinter(var drawer: Drawer) : UIChooser {
         throw UIException("Wrong input!")
     }
 
-    override fun optionSellTicket(hallDAO: RuntimeCinemaHallDAO, ticketDAO: TicketDAO, sessionDAO: SessionDAO) {
+    override fun optionSellTicket(hallDAO: CinemaHallDAO, ticketDAO: TicketDAO, sessionDAO: SessionDAO) {
 
         try {
             println(
@@ -83,6 +78,7 @@ class ConsolePrinter(var drawer: Drawer) : UIChooser {
             println("Choose a seat.")
             val seat = chooseSeat(session)
 
+
             val ticket = ticketDAO.sellTicket(seat, session)
             println("Here's your ticket:")
             drawer.drawTicket(ticket, session)
@@ -100,7 +96,7 @@ class ConsolePrinter(var drawer: Drawer) : UIChooser {
 
     }
 
-    override fun optionReturnTicket(hallDAO: RuntimeCinemaHallDAO, ticketDAO: TicketDAO) {
+    override fun optionReturnTicket(hallDAO: CinemaHallDAO, ticketDAO: TicketDAO) {
         try {
             val pair = findTicket(hallDAO)
             ticketDAO.returnTicket(pair.first, pair.second)
@@ -118,11 +114,11 @@ class ConsolePrinter(var drawer: Drawer) : UIChooser {
         }
     }
 
-    override fun optionEditData(hallDAO: RuntimeCinemaHallDAO, movieDAO: MovieDAO) {
+    override fun optionEditData(hallDAO: CinemaHallDAO, movieDAO: MovieDAO, sessionDAO: SessionDAO, hall: CinemaHall) {
         println("1. PRESS 1 IF YOU WANT TO EDIT MOVIES INFO")
         println("2. PRESS 2 IF YOU WANT TO EDIT SESSIONS INFO")
-        println("2. PRESS 3 IF YOU WANT TO ADD NEW MOVIE")
-        println("2. PRESS 4 IF YOU WANT TO ADD NEW SESSION")
+        println("3. PRESS 3 IF YOU WANT TO ADD NEW MOVIE")
+        println("4. PRESS 4 IF YOU WANT TO ADD NEW SESSION")
 
         try {
             var keyCode = checkIntInput("Wrong action. Try again:")
@@ -158,7 +154,7 @@ class ConsolePrinter(var drawer: Drawer) : UIChooser {
                                 "Available sessions:"
                     )
                     val session = sessions[chooseByNumber(sessions)]
-                    editSessions(session)
+                    editSessions(session, sessionDAO)
                 }
 
                 3 -> {
@@ -184,7 +180,7 @@ class ConsolePrinter(var drawer: Drawer) : UIChooser {
                     val line = checkStringInput()
                     val formatter = DateTimeFormatter.ofPattern("dd mm YYYY HH:mm")
                     val date = LocalDateTime.parse(line, formatter)
-                    hallDAO.addSession(movie, date)
+                    hallDAO.addSession(movie, date, hall)
 
                 }
 
@@ -202,7 +198,7 @@ class ConsolePrinter(var drawer: Drawer) : UIChooser {
 
     }
 
-    override fun optionCheckTicket(hallDAO: RuntimeCinemaHallDAO, ticketDAO: TicketDAO) {
+    override fun optionCheckTicket(hallDAO: CinemaHallDAO, ticketDAO: TicketDAO) {
         try {
             val pair = findTicket(hallDAO)
             ticketDAO.checkTicket(pair.first, pair.second)
@@ -283,7 +279,7 @@ class ConsolePrinter(var drawer: Drawer) : UIChooser {
         return num - 1;
     }
 
-    private fun findTicket(hallDAO: RuntimeCinemaHallDAO): Pair<Ticket, Session> {
+    private fun findTicket(hallDAO: CinemaHallDAO): Pair<Ticket, Session> {
         try {
             println(
                 "What movie do you have ticket for?"
@@ -325,16 +321,27 @@ class ConsolePrinter(var drawer: Drawer) : UIChooser {
             when (keyCode) {
                 1 -> {
                     println("Enter new movie name:")
-                    movie.name = checkStringInput()
+                    movieDAO.changeName(checkStringInput(), movie)
+                    println("Successfully changed!")
                 }
 
                 2 -> {
                     println("Enter movie new description:")
-                    movie.description = checkStringInput()
+                    movieDAO.changeDescription(checkStringInput(), movie)
+                    println("Successfully changed!")
                 }
 
                 3 -> {
+                    println("Type actor name:")
                     movieDAO.addActor(checkStringInput(), movie)
+                    println("Type actor name or press '0' to exit to main menu:")
+                    var input = checkStringInput()
+                    while (input != "0") {
+                        movieDAO.addActor(input, movie)
+                        println("Type actor name or press '0' to exit to main menu:")
+                        input = checkStringInput()
+                    }
+
                 }
             }
         } catch (e: Exception) {
@@ -344,16 +351,15 @@ class ConsolePrinter(var drawer: Drawer) : UIChooser {
     }
 
 
-    private fun editSessions(session: Session) {
+    private fun editSessions(session: Session, sessionDAO: SessionDAO) {
         try {
             println("Enter session new date and time as [day month year hour:minutes]:")
             val line = checkStringInput()
             val formatter = DateTimeFormatter.ofPattern("dd mm YYYY HH:mm")
             val date = LocalDateTime.parse(line, formatter)
-            session.time = date
+            sessionDAO.changeSessionTime(date, session)
         } catch (e: DateTimeParseException) {
             println("Wrong data format!")
-            editSessions(session)
         } catch (e: Exception) {
             println(e.message)
         }

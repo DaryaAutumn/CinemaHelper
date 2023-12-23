@@ -5,7 +5,6 @@ import cinema.exceptions.EmptyListException
 import cinema.exceptions.MovieNotExistsException
 import cinema.serialization.CinemaSerializer
 import java.time.LocalDateTime
-import java.util.*
 
 class RuntimeCinemaHallDAO : CinemaHallDAO {
 
@@ -23,9 +22,9 @@ class RuntimeCinemaHallDAO : CinemaHallDAO {
         }
     }
 
-    override fun addSession(movie: Movie, time: LocalDateTime) {
+    override fun addSession(movie: Movie, time: LocalDateTime, hall: CinemaHall) {
         try {
-            val session = Session(movie, time)
+            val session = Session(movie, time, hall)
             val sessions = CinemaSerializer.deserializeSessions()
             sessions.add(session)
             CinemaSerializer.serializeSessions(sessions)
@@ -48,7 +47,7 @@ class RuntimeCinemaHallDAO : CinemaHallDAO {
     override fun findSessionsByMovie(movie: Movie): MutableList<Session> {
         val sessionsList = mutableListOf<Session>()
         for (session in CinemaSerializer.deserializeSessions()) {
-            if (session.movie.equals(movie)) {
+            if (session.movie.equals(movie) && session.time > LocalDateTime.now()) {
                 sessionsList.add(session)
             }
         }

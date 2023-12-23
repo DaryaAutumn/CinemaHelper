@@ -1,22 +1,21 @@
 package cinema.ui
 
 import cinema.dao.*
-import cinema.entity.Worker
+import cinema.entity.CinemaHall
 
 interface UIChooser {
 
-    fun start(): Worker
+    fun start(hall: CinemaHall)
 
     fun chooseOption(): Options
 
-    // TODO (change Runtime to DAO)
-    fun optionSellTicket(hallDAO: RuntimeCinemaHallDAO, ticketDAO: TicketDAO, sessionDAO: SessionDAO)
+    fun optionSellTicket(hallDAO: CinemaHallDAO, ticketDAO: TicketDAO, sessionDAO: SessionDAO)
 
-    fun optionReturnTicket(hallDAO: RuntimeCinemaHallDAO, ticketDAO: TicketDAO)
+    fun optionReturnTicket(hallDAO: CinemaHallDAO, ticketDAO: TicketDAO)
 
-    fun optionEditData(hallDAO: RuntimeCinemaHallDAO, movieDAO: MovieDAO)
+    fun optionEditData(hallDAO: CinemaHallDAO, movieDAO: MovieDAO, sessionDAO: SessionDAO, hall: CinemaHall)
 
-    fun optionCheckTicket(hallDAO: RuntimeCinemaHallDAO, ticketDAO: TicketDAO)
+    fun optionCheckTicket(hallDAO: CinemaHallDAO, ticketDAO: TicketDAO)
 
     fun optionExit()
 
