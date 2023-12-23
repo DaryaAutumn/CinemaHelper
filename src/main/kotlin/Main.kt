@@ -3,6 +3,8 @@ import cinema.dao.RuntimeMovieDAO
 import cinema.dao.RuntimeSessionDAO
 import cinema.dao.RuntimeTicketDAO
 import cinema.entity.CinemaHall
+import cinema.entity.Movie
+import cinema.entity.Session
 import cinema.entity.Worker
 import cinema.exceptions.UIException
 import cinema.ui.ConsoleDrawer
@@ -12,23 +14,36 @@ import java.time.LocalDateTime
 
 fun main(args: Array<String>) {
 
-    var currentWorker: Worker
+    val currentWorker: Worker
     val mainHall = CinemaHall(10, 10)
 
     // init DAOs
-    val hallDAO = RuntimeCinemaHallDAO(mainHall)
+    val hallDAO = RuntimeCinemaHallDAO()
     val movieDAO = RuntimeMovieDAO()
     val sessionDAO = RuntimeSessionDAO()
     val ticketDAO = RuntimeTicketDAO()
     val consoleDrawer = ConsoleDrawer()
     val consolePrinter = ConsolePrinter(consoleDrawer)
 
-    hallDAO.addMovie(
-        "Boy and a bird",
-        "Мальчик Махито сильно тоскует по своей матери и решает отправиться в рискованное путешествие в потусторонний мир. В иной реальности исход неминуем, а жизнь обретает новое начало"
+    val m = mutableListOf(
+        Movie("The boy and the heron", "1"),
+        Movie("Interstellar", "2"),
+        Movie("Bohemian Rhapsody", "3")
     )
 
-    hallDAO.addSession(hallDAO.findMovieByName("Boy and a bird"), LocalDateTime.of(2023, 12, 22, 23, 30))
+    var s = mutableListOf(
+        Session(m[0], LocalDateTime.of(2023, 12, 23, 21, 0), mainHall),
+        Session(m[0], LocalDateTime.of(2023, 12, 23, 23, 0), mainHall),
+        Session(m[1], LocalDateTime.of(2023, 12, 23, 19, 0), mainHall),
+        Session(m[1], LocalDateTime.of(2023, 12, 23, 17, 0), mainHall),
+        Session(m[2], LocalDateTime.of(2023, 12, 23, 15, 0), mainHall),
+        Session(m[2], LocalDateTime.of(2023, 12, 23, 14, 0), mainHall),
+    )
+
+    //CinemaSerializer.serializeMovies(m)
+    //CinemaSerializer.serializeSessions(s)
+
+
 
     try {
         currentWorker = consolePrinter.start()

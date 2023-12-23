@@ -11,7 +11,6 @@ class ConsoleDrawer : Drawer {
     val yellow = "\u001b[33m"
 
     override fun drawSeats(session: Session) {
-
         for (i in 0..<session.tickets.size) {
             for (j in 0..<session.tickets[i].size) {
                 val iFormat = String.format("%02d", i + 1)
@@ -26,11 +25,11 @@ class ConsoleDrawer : Drawer {
         }
     }
 
-    override fun drawTicket(ticket: Ticket) {
+    override fun drawTicket(ticket: Ticket, session: Session) {
         print(yellow)
         println("---------------")
-        println(ticket.session.movie.name)
-        println(ticket.session.toString())
+        println(session.movie.name)
+        println(session.toString())
         println("seat: ${ticket.seat}")
         println("---------------")
         print(white)

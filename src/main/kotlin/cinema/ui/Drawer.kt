@@ -7,6 +7,6 @@ interface Drawer {
 
     fun drawSeats(session: Session)
 
-    fun drawTicket(ticket: Ticket)
+    fun drawTicket(ticket: Ticket, session: Session)
 
 }

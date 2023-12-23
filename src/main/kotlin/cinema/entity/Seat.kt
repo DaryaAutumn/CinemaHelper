@@ -1,5 +1,8 @@
 package cinema.entity
 
+import kotlinx.serialization.Serializable
+
+@Serializable
 data class Seat (
     val row : Int,
     val line: Int

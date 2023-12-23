@@ -9,6 +9,7 @@ import cinema.exceptions.EmptyListException
 import cinema.exceptions.MovieNotExistsException
 import cinema.exceptions.TicketException
 import cinema.exceptions.UIException
+import cinema.serialization.CinemaSerializer
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.time.format.DateTimeParseException
@@ -65,7 +66,8 @@ class ConsolePrinter(var drawer: Drawer) : UIChooser {
                 "Choose a movie by printing its number. " +
                         "Available movies:"
             )
-            val movieName = hallDAO.hall.movies[chooseByNumber(hallDAO.hall.movies)].name
+            val movieName =
+                CinemaSerializer.deserializeMovies()[chooseByNumber(CinemaSerializer.deserializeMovies())].name
             val movie = hallDAO.findMovieByName(movieName)
             val sessions = hallDAO.findSessionsByMovie(movie)
             println(
@@ -83,7 +85,7 @@ class ConsolePrinter(var drawer: Drawer) : UIChooser {
 
             val ticket = ticketDAO.sellTicket(seat, session)
             println("Here's your ticket:")
-            drawer.drawTicket(ticket)
+            drawer.drawTicket(ticket, session)
             println("Thank you for buying a ticket!")
 
         } catch (e: MovieNotExistsException) {
@@ -100,8 +102,8 @@ class ConsolePrinter(var drawer: Drawer) : UIChooser {
 
     override fun optionReturnTicket(hallDAO: RuntimeCinemaHallDAO, ticketDAO: TicketDAO) {
         try {
-            val ticket = findTicket(hallDAO)
-            ticketDAO.returnTicket(ticket)
+            val pair = findTicket(hallDAO)
+            ticketDAO.returnTicket(pair.first, pair.second)
             println("Successfully returned!")
 
 
@@ -135,7 +137,8 @@ class ConsolePrinter(var drawer: Drawer) : UIChooser {
                         "Choose a movie by printing its number. " +
                                 "Available movies:"
                     )
-                    val movieName = hallDAO.hall.movies[chooseByNumber(hallDAO.hall.movies)].name
+                    val movieName =
+                        CinemaSerializer.deserializeMovies()[chooseByNumber(CinemaSerializer.deserializeMovies())].name
                     val movie = hallDAO.findMovieByName(movieName)
                     editMovie(movie, movieDAO)
 
@@ -146,7 +149,8 @@ class ConsolePrinter(var drawer: Drawer) : UIChooser {
                         "Choose a movie by printing its number to edit its sessions. " +
                                 "Available movies:"
                     )
-                    val movieName = hallDAO.hall.movies[chooseByNumber(hallDAO.hall.movies)].name
+                    val movieName =
+                        CinemaSerializer.deserializeMovies()[chooseByNumber(CinemaSerializer.deserializeMovies())].name
                     val movie = hallDAO.findMovieByName(movieName)
                     val sessions = hallDAO.findSessionsByMovie(movie)
                     println(
@@ -172,8 +176,10 @@ class ConsolePrinter(var drawer: Drawer) : UIChooser {
                         "Choose a movie by printing its number to add new session. " +
                                 "Available movies:"
                     )
-                    val movieName = hallDAO.hall.movies[chooseByNumber(hallDAO.hall.movies)].name
+                    val movieName =
+                        CinemaSerializer.deserializeMovies()[chooseByNumber(CinemaSerializer.deserializeMovies())].name
                     val movie = hallDAO.findMovieByName(movieName)
+                    // TODO
                     println("Enter session new date and time as [dd mm YYYY HH:mm]:")
                     val line = checkStringInput()
                     val formatter = DateTimeFormatter.ofPattern("dd mm YYYY HH:mm")
@@ -187,9 +193,9 @@ class ConsolePrinter(var drawer: Drawer) : UIChooser {
             println(e.message)
         } catch (e: EmptyListException) {
             println(e.message)
-        }catch (e: DateTimeParseException){
+        } catch (e: DateTimeParseException) {
             println("Wrong data format!")
-        } catch (e : Exception){
+        } catch (e: Exception) {
             println(e.message)
         }
 
@@ -198,8 +204,8 @@ class ConsolePrinter(var drawer: Drawer) : UIChooser {
 
     override fun optionCheckTicket(hallDAO: RuntimeCinemaHallDAO, ticketDAO: TicketDAO) {
         try {
-            val ticket = findTicket(hallDAO)
-            ticketDAO.checkTicket(ticket)
+            val pair = findTicket(hallDAO)
+            ticketDAO.checkTicket(pair.first, pair.second)
             println("Ticket checked. Enjoy the movie!")
         } catch (e: MovieNotExistsException) {
             println(e.message)
@@ -247,18 +253,18 @@ class ConsolePrinter(var drawer: Drawer) : UIChooser {
         var row = checkIntInput()
         println("Type number of seat:")
         var col = checkIntInput()
-        if (!toReturn) {
-            while (row <= 0 || row >= session.tickets.size ||
-                col <= 0 || col >= session.tickets[0].size ||
-                session.tickets[row - 1][col - 1].isSold
-            ) {
-                println("This seat is taken! Choose another one:")
-                println("Choose a seat. Type a row:")
-                row = checkIntInput()
-                println("Type number of seat:")
-                col = checkIntInput()
-            }
+        while (row <= 0 || row > session.tickets.size ||
+            col <= 0 || col > session.tickets[0].size ||
+            session.tickets[row - 1][col - 1].isSold == !toReturn
+        ) {
+            println("Wrong seat! Choose another one:")
+            println("Type a row:")
+            row = checkIntInput()
+            println("Type number of seat:")
+            col = checkIntInput()
         }
+
+
         return Seat(row - 1, col - 1)
     }
 
@@ -277,12 +283,13 @@ class ConsolePrinter(var drawer: Drawer) : UIChooser {
         return num - 1;
     }
 
-    private fun findTicket(hallDAO: RuntimeCinemaHallDAO): Ticket {
+    private fun findTicket(hallDAO: RuntimeCinemaHallDAO): Pair<Ticket, Session> {
         try {
             println(
                 "What movie do you have ticket for?"
             )
-            val movieName = hallDAO.hall.movies[chooseByNumber(hallDAO.hall.movies)].name
+            val movieName =
+                CinemaSerializer.deserializeMovies()[chooseByNumber(CinemaSerializer.deserializeMovies())].name
             val movie = hallDAO.findMovieByName(movieName)
             val sessions = hallDAO.findSessionsByMovie(movie)
             println(
@@ -292,7 +299,8 @@ class ConsolePrinter(var drawer: Drawer) : UIChooser {
             val session = sessions[chooseByNumber(sessions)]
             println("What is your seat?")
             val seat = chooseSeat(session, true)
-            return hallDAO.findTicketBySession(session, seat)
+            val ticket = hallDAO.findTicketBySession(session, seat)
+            return Pair(ticket, session)
         } catch (e: MovieNotExistsException) {
             throw e
         } catch (e: EmptyListException) {
@@ -338,13 +346,14 @@ class ConsolePrinter(var drawer: Drawer) : UIChooser {
 
     private fun editSessions(session: Session) {
         try {
-            println("Enter session new date and time as [dd mm YYYY HH:mm]:")
+            println("Enter session new date and time as [day month year hour:minutes]:")
             val line = checkStringInput()
             val formatter = DateTimeFormatter.ofPattern("dd mm YYYY HH:mm")
             val date = LocalDateTime.parse(line, formatter)
             session.time = date
         } catch (e: DateTimeParseException) {
             println("Wrong data format!")
+            editSessions(session)
         } catch (e: Exception) {
             println(e.message)
         }

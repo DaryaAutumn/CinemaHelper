@@ -8,8 +8,8 @@ interface TicketDAO {
 
     fun sellTicket(seat: Seat, session: Session): Ticket
 
-    fun returnTicket(ticket: Ticket)
+    fun returnTicket(ticket: Ticket, session: Session)
 
-    fun checkTicket(ticket: Ticket)
+    fun checkTicket(ticket: Ticket, session: Session)
 
 }

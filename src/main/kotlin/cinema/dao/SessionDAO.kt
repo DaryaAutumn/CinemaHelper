@@ -13,4 +13,6 @@ interface SessionDAO {
 
     fun isSold(session: Session): Boolean
 
+    fun findSessionId(session: Session, sessions: MutableList<Session>) : Session
+
 }

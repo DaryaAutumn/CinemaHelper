@@ -3,27 +3,41 @@ package cinema.dao
 import cinema.entity.*
 import cinema.exceptions.EmptyListException
 import cinema.exceptions.MovieNotExistsException
+import cinema.serialization.CinemaSerializer
 import java.time.LocalDateTime
 import java.util.*
 
-class RuntimeCinemaHallDAO(val hall: CinemaHall) : CinemaHallDAO {
+class RuntimeCinemaHallDAO : CinemaHallDAO {
 
     override fun addMovie(name: String, description: String, vararg actorNames: String) {
-        val movie = Movie(name, description)
-        for (actor in actorNames) {
-            movie.actors.add(actor)
+        try {
+            val movie = Movie(name, description)
+            for (actor in actorNames) {
+                movie.actors.add(actor)
+            }
+            val movies = CinemaSerializer.deserializeMovies()
+            movies.add(movie)
+            CinemaSerializer.serializeMovies(movies)
+        } catch (e: Exception) {
+            println(e.message)
         }
-        hall.movies.add(movie)
     }
 
-
     override fun addSession(movie: Movie, time: LocalDateTime) {
-        val session = Session(hall, movie, time)
-        hall.sessions.add(session)
+        try {
+            val session = Session(movie, time)
+            val sessions = CinemaSerializer.deserializeSessions()
+            sessions.add(session)
+            CinemaSerializer.serializeSessions(sessions)
+        } catch (e: Exception) {
+            println(e.message)
+        }
+
     }
 
     override fun findMovieByName(name: String): Movie {
-        for (movie in hall.movies) {
+        val movies = CinemaSerializer.deserializeMovies()
+        for (movie in movies) {
             if (name == movie.name) {
                 return movie;
             }
@@ -33,7 +47,7 @@ class RuntimeCinemaHallDAO(val hall: CinemaHall) : CinemaHallDAO {
 
     override fun findSessionsByMovie(movie: Movie): MutableList<Session> {
         val sessionsList = mutableListOf<Session>()
-        for (session in hall.sessions) {
+        for (session in CinemaSerializer.deserializeSessions()) {
             if (session.movie.equals(movie)) {
                 sessionsList.add(session)
             }
