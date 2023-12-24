@@ -175,10 +175,9 @@ class ConsolePrinter(private var drawer: Drawer) : UIChooser {
                     val movieName =
                         CinemaSerializer.deserializeMovies()[chooseByNumber(CinemaSerializer.deserializeMovies())].name
                     val movie = hallDAO.findMovieByName(movieName)
-                    // TODO
-                    println("Enter session new date and time as [dd mm YYYY HH:mm]:")
+                    println("Enter session new date and time as [YYYY-mm-dd-HH:mm] (for example 2023-12-24-23:59):")
                     val line = checkStringInput()
-                    val formatter = DateTimeFormatter.ofPattern("dd mm YYYY HH:mm")
+                    val formatter = DateTimeFormatter.ofPattern("YYYY-mm-dd-HH:mm")
                     val date = LocalDateTime.parse(line, formatter)
                     hallDAO.addSession(movie, date, hall)
 
@@ -353,9 +352,9 @@ class ConsolePrinter(private var drawer: Drawer) : UIChooser {
 
     private fun editSessions(session: Session, sessionDAO: SessionDAO) {
         try {
-            println("Enter session new date and time as [day month year hour:minutes]:")
+            println("Enter session new date and time as [YYYY-mm-dd-HH:mm] (for example 2023-12-24-23:59):")
             val line = checkStringInput()
-            val formatter = DateTimeFormatter.ofPattern("dd mm YYYY HH:mm")
+            val formatter = DateTimeFormatter.ofPattern("YYYY-mm-dd-HH:mm")
             val date = LocalDateTime.parse(line, formatter)
             sessionDAO.changeSessionTime(date, session)
         } catch (e: DateTimeParseException) {
